@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CRM GNC Local</title>
+  <style>
+    :root{
+      --bg:#0b1220;
+      --panel:#111827;
+      --panel2:#1f2937;
+      --line:#334155;
+      --text:#e5e7eb;
+      --muted:#94a3b8;
+      --accent:#f59e0b;
+      --green:#22c55e;
+      --red:#ef4444;
+      --blue:#38bdf8;
+      --shadow:0 10px 30px rgba(0,0,0,.25);
+      --radius:18px;
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0;padding:0;background:linear-gradient(180deg,#0b1220,#111827);color:var(--text);font-family:Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif}
+    body{min-height:100vh}
+    .app{max-width:1440px;margin:0 auto;padding:16px}
+    .topbar{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:16px}
+    .brand{display:flex;align-items:center;gap:12px}
+    .logo{width:44px;height:44px;border-radius:14px;background:linear-gradient(135deg,var(--accent),#f97316);display:grid;place-items:center;color:#111827;font-weight:800;box-shadow:var(--shadow)}
+    .title h1{margin:0;font-size:1.1rem}
+    .title p{margin:2px 0 0;color:var(--muted);font-size:.92rem}
+    .toolbar{display:flex;gap:10px;flex-wrap:wrap}
+    .searchbar,.btn,input,select,textarea{border:none;outline:none;border-radius:14px}
+    .searchbar,input,select,textarea{background:var(--panel);border:1px solid var(--line);color:var(--text)}
+    .searchbar{padding:12px 14px;min-width:280px}
+    .btn{padding:12px 14px;background:var(--panel2);border:1px solid var(--line);color:var(--text);cursor:pointer;font-weight:700}
+    .btn:hover{filter:brightness(1.08)}
+    .btn.primary{background:linear-gradient(135deg,var(--accent),#f97316);border:none;color:#111827}
+    .btn.green{background:linear-gradient(135deg,var(--green),#16a34a);border:none;color:#052e16}
+    .btn.red{background:linear-gradient(135deg,var(--red),#dc2626);border:none;color:#fff}
+    .layout{display:grid;grid-template-columns:250px 1fr;gap:16px}
+    .sidebar,.panel{background:rgba(17,24,39,.92);backdrop-filter:blur(6px);border:1px solid rgba(51,65,85,.9);border-radius:var(--radius);box-shadow:var(--shadow)}
+    .sidebar{padding:14px;height:calc(100vh - 98px);position:sticky;top:16px}
+    .nav{display:flex;flex-direction:column;gap:8px}
+    .nav button{padding:12px 14px;border-radius:14px;background:transparent;border:1px solid transparent;color:var(--text);text-align:left;cursor:pointer;font-weight:700}
+    .nav button.active,.nav button:hover{background:var(--panel2);border-color:var(--line)}
+    .main{display:flex;flex-direction:column;gap:16px}
+    .panel{padding:16px}
+    .panel h2{margin:0 0 14px;font-size:1.05rem}
+    .metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+    .card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px}
+    .metric-label{color:var(--muted);font-size:.9rem;margin-bottom:6px}
+    .metric-value{font-size:1.8rem;font-weight:800}
+    .grid-2{display:grid;grid-template-columns:1.2fr .8fr;gap:16px}
+    .grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+    .form-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+    .field{display:flex;flex-direction:column;gap:7px}
+    .field label{font-size:.88rem;color:var(--muted)}
+    input,select,textarea{padding:11px 12px;width:100%}
+    textarea{min-height:92px;resize:vertical}
+    .actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+    .stack{display:flex;flex-direction:column;gap:12px}
+    .small{font-size:.86rem}
+    .muted{color:var(--muted)}
+    .notice{padding:12px 14px;background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.35);border-radius:14px;color:#fde68a}
+    .empty{padding:20px;border:1px dashed var(--line);border-radius:16px;color:var(--muted);text-align:center}
+    .hidden{display:none}
+    .chip{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:999px;background:#1e293b;border:1px solid var(--line);font-size:.82rem;font-weight:700}
+    .cat-instalacion{color:#fde68a}
+    .cat-ph{color:#93c5fd}
+    .cat-oblea{color:#86efac}
+    .cat-repuesto{color:#fca5a5}
+    .estado-pendiente{color:#fde68a}
+    .estado-atendido{color:#93c5fd}
+    .estado-cerrado{color:#86efac}
+    .estado-perdido{color:#fca5a5}
+    table{width:100%;border-collapse:collapse}
+    th,td{padding:12px 10px;border-bottom:1px solid var(--line);text-align:left;font-size:.94rem;vertical-align:top}
+    th{color:var(--muted);font-weight:600}
+    tr:hover td{background:rgba(30,41,59,.35)}
+    .row-actions{display:flex;gap:8px;flex-wrap:wrap}
+    .row-actions .btn{padding:8px 10px;font-size:.82rem;border-radius:12px}
+    @media (max-width:1100px){.metrics,.grid-3,.form-grid,.grid-2{grid-template-columns:1fr}}
+    @media (max-width:860px){
+      .layout{grid-template-columns:1fr}
+      .sidebar{height:auto;position:relative;top:auto}
+      .searchbar{min-width:0;flex:1}
+      table,thead,tbody,tr,th,td{display:block}
+      thead{display:none}
+      tr{padding:10px 0;border-bottom:1px solid var(--line)}
+      td{border-bottom:none;padding:6px 0}
+      td::before{content:attr(data-label);display:block;color:var(--muted);font-size:.8rem;margin-bottom:4px}
+    }
+    @media (max-width:520px){.app{padding:12px}.searchbar,.btn,input,select,textarea{font-size:16px}}
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="topbar">
+      <div class="brand">
+        <div class="logo">GNC</div>
+        <div class="title">
+          <h1>CRM GNC Firebase</h1>
+          <p>Consultas, clientes y vehículos con Realtime Database.</p>
+        </div>
+      </div>
+      <div class="toolbar">
+        <input id="globalSearch" class="searchbar" type="text" placeholder="Buscar por patente, cliente o teléfono" />
+        <button type="button" class="btn primary" id="btnNuevaConsultaTop">Nueva consulta</button>
+        <button type="button" class="btn" id="btnDemo">Cargar demo</button>
+        <button type="button" class="btn red" id="btnVaciar">Vaciar</button>
+      </div>
+    </div>
+    <div class="layout">
+      <aside class="sidebar">
+        <div class="nav">
+          <button type="button" data-view="dashboard" class="active">Dashboard</button>
+          <button type="button" data-view="consulta">Nueva consulta</button>
+          <button type="button" data-view="consultas">Consultas</button>
+          <button type="button" data-view="clientes">Clientes</button>
+          <button type="button" data-view="vehiculos">Vehículos</button>
+        </div>
+      </aside>
+      <main class="main">
+        <section id="view-dashboard" class="view">
+          <div class="metrics">
+            <div class="card"><div class="metric-label">Consultas activas</div><div id="mConsultas" class="metric-value">0</div></div>
+            <div class="card"><div class="metric-label">Clientes</div><div id="mClientes" class="metric-value">0</div></div>
+            <div class="card"><div class="metric-label">Vehículos</div><div id="mVehiculos" class="metric-value">0</div></div>
+          </div>
+          <div class="grid-2">
+            <div class="panel">
+              <h2>Últimas consultas</h2>
+              <div id="dashboardConsultas"></div>
+            </div>
+            <div class="panel stack">
+              <div>
+                <h2>Categorías</h2>
+                <div id="dashboardCategorias" class="stack"></div>
+              </div>
+              <div class="notice small">Flujo: entra consulta, hablás con el cliente, marcás pendiente, atendido, cerrado o perdido.</div>
+            </div>
+          </div>
+        </section>
+        <section id="view-consulta" class="view hidden panel">
+          <h2>Nueva consulta</h2>
+          <div class="form-grid">
+            <div class="field"><label for="qNombre">Nombre del cliente</label><input id="qNombre" type="text" placeholder="Ej: Juan Pérez" /></div>
+            <div class="field"><label for="qTelefono">Teléfono</label><input id="qTelefono" type="text" placeholder="Ej: 351..." /></div>
+            <div class="field"><label for="qVehiculo">Vehículo</label><input id="qVehiculo" type="text" placeholder="Ej: Gol Trend" /></div>
+            <div class="field"><label for="qPatente">Patente</label><input id="qPatente" type="text" placeholder="Ej: AA123BB" /></div>
+            <div class="field"><label for="qCategoria">Categoría</label><select id="qCategoria"><option value="instalacion">Instalación</option><option value="ph">PH</option><option value="oblea">Oblea</option><option value="repuesto">Repuesto</option></select></div>
+            <div class="field"><label for="qEquipo">Tipo de equipo</label><input id="qEquipo" type="text" placeholder="Ej: 5ta generación" /></div>
+          </div>
+          <div class="field" style="margin-top:12px"><label for="qObs">Observación</label><textarea id="qObs" placeholder="Detalle breve de la consulta"></textarea></div>
+          <div class="actions">
+            <button type="button" class="btn primary" id="btnGuardarConsulta">Guardar consulta</button>
+            <button type="button" class="btn" id="btnLimpiarConsulta">Limpiar</button>
+          </div>
+        </section>
+        <section id="view-consultas" class="view hidden panel stack">
+          <div>
+            <h2>Consultas</h2>
+            <div class="small muted">Marcá el estado después de hablar con el cliente. También podés borrar errores de carga.</div>
+          </div>
+          <div class="grid-3">
+            <div class="card"><div class="metric-label">Pendientes</div><div id="mPendientes" class="metric-value" style="font-size:1.4rem">0</div></div>
+            <div class="card"><div class="metric-label">Cerradas</div><div id="mCerradas" class="metric-value" style="font-size:1.4rem">0</div></div>
+            <div class="card"><div class="metric-label">Perdidas</div><div id="mPerdidas" class="metric-value" style="font-size:1.4rem">0</div></div>
+          </div>
+          <div id="consultasTableWrap"></div>
+        </section>
+        <section id="view-clientes" class="view hidden panel"><h2>Clientes</h2><div id="clientesTableWrap"></div></section>
+        <section id="view-vehiculos" class="view hidden panel"><h2>Vehículos</h2><div id="vehiculosTableWrap"></div></section>
+      </main>
+    </div>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-database-compat.js"></script>
+  <script>
+    (function(){
+      
+const firebaseConfig = {
+apiKey: "AIzaSyCygLsN8wT8lk4Gkgcg7Thyl_W335YDfmo",
+authDomain: "crm-jessi.firebaseapp.com",
+databaseURL: "https://crm-jessi-default-rtdb.firebaseio.com",
+projectId: "crm-jessi",
+storageBucket: "crm-jessi.firebasestorage.app",
+messagingSenderId: "309540462807",
+appId: "1:309540462807:web:a5fe65636bb36a55289092"
+};
+
+
+      firebase.initializeApp(firebaseConfig);
+      const db = firebase.database();
+      const dbRef = db.ref('crm_gnc_local_v1');
+
+      let state = { clientes: [], vehiculos: [], consultas: [] };
+      let isLoaded = false;
+
+      const els = {
+        globalSearch: document.getElementById('globalSearch'),
+        mConsultas: document.getElementById('mConsultas'),
+        mClientes: document.getElementById('mClientes'),
+        mVehiculos: document.getElementById('mVehiculos'),
+        mPendientes: document.getElementById('mPendientes'),
+        mCerradas: document.getElementById('mCerradas'),
+        mPerdidas: document.getElementById('mPerdidas'),
+        dashboardConsultas: document.getElementById('dashboardConsultas'),
+        dashboardCategorias: document.getElementById('dashboardCategorias'),
+        consultasTableWrap: document.getElementById('consultasTableWrap'),
+        clientesTableWrap: document.getElementById('clientesTableWrap'),
+        vehiculosTableWrap: document.getElementById('vehiculosTableWrap'),
+        qNombre: document.getElementById('qNombre'),
+        qTelefono: document.getElementById('qTelefono'),
+        qVehiculo: document.getElementById('qVehiculo'),
+        qPatente: document.getElementById('qPatente'),
+        qCategoria: document.getElementById('qCategoria'),
+        qEquipo: document.getElementById('qEquipo'),
+        qObs: document.getElementById('qObs')
+      };
+
+      function normalizeState(data){
+        if(!data || typeof data !== 'object') return { clientes: [], vehiculos: [], consultas: [] };
+        return {
+          clientes: Array.isArray(data.clientes) ? data.clientes : [],
+          vehiculos: Array.isArray(data.vehiculos) ? data.vehiculos : [],
+          consultas: Array.isArray(data.consultas) ? data.consultas : []
+        };
+      }
+
+      function persist(){
+        if(!isLoaded) return;
+        dbRef.set(state).then(renderAll).catch(err => {
+          console.error('Error guardando en Firebase:', err);
+          alert('No se pudo guardar en Firebase. Revisá reglas y conexión.');
+        });
+      }
+
+      function uid(prefix){ return prefix + '_' + Math.random().toString(36).slice(2,9); }
+      function today(){ return new Date().toLocaleDateString('es-AR'); }
+      function sanitizeText(v){ return (v || '').toString().trim(); }
+      function normalize(v){ return sanitizeText(v).toLowerCase(); }
+      function normalizePatente(v){ return sanitizeText(v).toUpperCase().replace(/\s+/g,''); }
+      function categoryLabel(cat){ return { instalacion:'Instalación', ph:'PH', oblea:'Oblea', repuesto:'Repuesto' }[cat] || cat; }
+      function categoryChip(cat){ return '<span class="chip cat-' + cat + '">' + categoryLabel(cat) + '</span>'; }
+      function estadoChip(estado){
+        const cls = { pendiente:'estado-pendiente', atendido:'estado-atendido', cerrado:'estado-cerrado', perdido:'estado-perdido' }[estado] || '';
+        const label = { pendiente:'Pendiente', atendido:'Atendido', cerrado:'Cerrado', perdido:'Perdido' }[estado] || estado;
+        return '<span class="chip ' + cls + '">' + label + '</span>';
+      }
+      function escapeHtml(str){ return String(str ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;'); }
+
+      function buildSimpleTable(rows, raw){
+        if(!rows.length) return '<div class="empty">Sin datos.</div>';
+        const headers = Object.keys(rows[0]);
+        let html = '<table><thead><tr>';
+        headers.forEach(h => html += '<th>' + h + '</th>');
+        html += '</tr></thead><tbody>';
+        rows.forEach(r => {
+          html += '<tr>';
+          headers.forEach(h => {
+            const val = raw ? r[h] : escapeHtml(r[h]);
+            html += '<td data-label="' + escapeHtml(h) + '">' + val + '</td>';
+          });
+          html += '</tr>';
+        });
+        html += '</tbody></table>';
+        return html;
+      }
+
+      function upsertClienteVehiculo(data){
+        let cliente = state.clientes.find(c => normalize(c.nombre) === normalize(data.nombre) && normalize(c.telefono) === normalize(data.telefono));
+        if(!cliente){
+          cliente = { id: uid('cli'), nombre: sanitizeText(data.nombre), telefono: sanitizeText(data.telefono), fechaAlta: today() };
+          state.clientes.unshift(cliente);
+        }
+        const patente = normalizePatente(data.patente);
+        let vehiculo = patente ? state.vehiculos.find(v => normalizePatente(v.patente) === patente) : null;
+        if(!vehiculo && (patente || sanitizeText(data.vehiculo))){
+          vehiculo = { id: uid('veh'), clienteId: cliente.id, vehiculo: sanitizeText(data.vehiculo), patente, tipoEquipo: sanitizeText(data.tipoEquipo || ''), fechaAlta: today() };
+          state.vehiculos.unshift(vehiculo);
+        } else if(vehiculo){
+          vehiculo.clienteId = cliente.id;
+          if(sanitizeText(data.vehiculo)) vehiculo.vehiculo = sanitizeText(data.vehiculo);
+          if(sanitizeText(data.tipoEquipo)) vehiculo.tipoEquipo = sanitizeText(data.tipoEquipo);
+        }
+        return { cliente, vehiculo };
+      }
+
+      function saveConsulta(){
+        const data = {
+          nombre: els.qNombre.value,
+          telefono: els.qTelefono.value,
+          vehiculo: els.qVehiculo.value,
+          patente: els.qPatente.value,
+          categoria: els.qCategoria.value,
+          tipoEquipo: els.qEquipo.value,
+          observacion: els.qObs.value
+        };
+        if(!sanitizeText(data.nombre) || !sanitizeText(data.telefono) || !sanitizeText(data.categoria)){
+          alert('Completá nombre, teléfono y categoría.');
+          return;
+        }
+        const pack = upsertClienteVehiculo(data);
+        state.consultas.unshift({
+          id: uid('con'), fecha: today(), clienteId: pack.cliente.id, vehiculoId: pack.vehiculo ? pack.vehiculo.id : null,
+          nombre: sanitizeText(data.nombre), telefono: sanitizeText(data.telefono), vehiculo: sanitizeText(data.vehiculo), patente: normalizePatente(data.patente),
+          categoria: data.categoria, tipoEquipo: sanitizeText(data.tipoEquipo), observacion: sanitizeText(data.observacion), estado: 'pendiente', fechaCierre: '', tallerCierre: '', motivoPerdido: ''
+        });
+        clearConsultaForm();
+        persist();
+        setView('consultas');
+      }
+
+      function clearConsultaForm(){
+        els.qNombre.value=''; els.qTelefono.value=''; els.qVehiculo.value=''; els.qPatente.value=''; els.qCategoria.value='instalacion'; els.qEquipo.value=''; els.qObs.value='';
+      }
+
+      function deleteConsulta(id){
+        const c = state.consultas.find(x => x.id === id);
+        if(!c) return;
+        if(!confirm('¿Borrar la consulta de ' + c.nombre + '?')) return;
+        state.consultas = state.consultas.filter(x => x.id !== id);
+        persist();
+      }
+
+      function setEstadoConsulta(id, estado){
+        const c = state.consultas.find(x => x.id === id);
+        if(!c) return;
+        if(estado === 'cerrado'){
+          const fecha = prompt('Fecha de cierre', c.fechaCierre || today());
+          if(fecha === null) return;
+          const taller = prompt('¿En qué taller se concretó?', c.tallerCierre || '');
+          if(taller === null) return;
+          c.fechaCierre = sanitizeText(fecha);
+          c.tallerCierre = sanitizeText(taller);
+          c.motivoPerdido = '';
+        }
+        if(estado === 'perdido'){
+          const motivo = prompt('Motivo de pérdida', c.motivoPerdido || '');
+          if(motivo === null) return;
+          c.motivoPerdido = sanitizeText(motivo);
+          c.fechaCierre = '';
+          c.tallerCierre = '';
+        }
+        if(estado === 'pendiente' || estado === 'atendido'){
+          c.fechaCierre = ''; c.tallerCierre = ''; c.motivoPerdido = '';
+        }
+        c.estado = estado;
+        persist();
+      }
+
+      function getClienteName(id){ const c = state.clientes.find(x => x.id === id); return c ? c.nombre : '-'; }
+      function setView(name){
+        document.querySelectorAll('.view').forEach(v => v.classList.add('hidden'));
+        const target = document.getElementById('view-' + name);
+        if(target) target.classList.remove('hidden');
+        document.querySelectorAll('.nav button').forEach(b => b.classList.toggle('active', b.dataset.view === name));
+      }
+
+      function renderDashboard(){
+        els.mConsultas.textContent = state.consultas.filter(c => c.estado === 'pendiente' || c.estado === 'atendido').length;
+        els.mClientes.textContent = state.clientes.length;
+        els.mVehiculos.textContent = state.vehiculos.length;
+        const ultimas = state.consultas.slice(0,5).map(c => ({ Fecha: escapeHtml(c.fecha), Cliente: escapeHtml(c.nombre), Patente: escapeHtml(c.patente || '-'), Categoría: categoryChip(c.categoria), Estado: estadoChip(c.estado) }));
+        els.dashboardConsultas.innerHTML = ultimas.length ? buildSimpleTable(ultimas, true) : '<div class="empty">Todavía no hay consultas.</div>';
+        const cats = ['instalacion','ph','oblea','repuesto'];
+        els.dashboardCategorias.innerHTML = cats.map(cat => '<div class="card" style="padding:12px 14px"><div class="metric-label">' + categoryLabel(cat) + '</div><div class="metric-value" style="font-size:1.3rem">' + state.consultas.filter(c => c.categoria === cat).length + '</div></div>').join('');
+      }
+
+      function renderConsultas(){
+        const q = normalize(els.globalSearch.value);
+        els.mPendientes.textContent = state.consultas.filter(c => c.estado === 'pendiente').length;
+        els.mCerradas.textContent = state.consultas.filter(c => c.estado === 'cerrado').length;
+        els.mPerdidas.textContent = state.consultas.filter(c => c.estado === 'perdido').length;
+        const rows = state.consultas.filter(c => (c.nombre + ' ' + c.telefono + ' ' + c.vehiculo + ' ' + c.patente + ' ' + c.estado + ' ' + c.tallerCierre + ' ' + c.motivoPerdido).toLowerCase().includes(q)).map(c => ({
+          Fecha: escapeHtml(c.fecha),
+          Cliente: '<strong>' + escapeHtml(c.nombre) + '</strong><div class="small muted">' + escapeHtml(c.telefono) + '</div>',
+          Vehículo: escapeHtml(c.vehiculo || '-') + '<div class="small muted">' + escapeHtml(c.patente || '-') + '</div>',
+          Categoría: categoryChip(c.categoria),
+          Estado: estadoChip(c.estado) + (c.fechaCierre ? '<div class="small muted" style="margin-top:6px">Cierre: ' + escapeHtml(c.fechaCierre) + '</div>' : '') + (c.tallerCierre ? '<div class="small muted">Taller: ' + escapeHtml(c.tallerCierre) + '</div>' : '') + (c.motivoPerdido ? '<div class="small muted">Motivo: ' + escapeHtml(c.motivoPerdido) + '</div>' : ''),
+          Acciones: '<div class="row-actions">' + '<button type="button" class="btn" data-action="pendiente" data-id="' + c.id + '">Pendiente</button>' + '<button type="button" class="btn" data-action="atendido" data-id="' + c.id + '">Atendido</button>' + '<button type="button" class="btn green" data-action="cerrado" data-id="' + c.id + '">Cerrado</button>' + '<button type="button" class="btn" data-action="perdido" data-id="' + c.id + '">Perdido</button>' + '<button type="button" class="btn red" data-action="borrar" data-id="' + c.id + '">Borrar</button>' + '</div>'
+        }));
+        els.consultasTableWrap.innerHTML = rows.length ? buildSimpleTable(rows, true) : '<div class="empty">No hay consultas cargadas.</div>';
+      }
+
+      function renderClientes(){
+        const q = normalize(els.globalSearch.value);
+        const rows = state.clientes.filter(c => (c.nombre + ' ' + c.telefono).toLowerCase().includes(q)).map(c => ({ Cliente: '<strong>' + escapeHtml(c.nombre) + '</strong>', Teléfono: escapeHtml(c.telefono || '-'), Fecha: escapeHtml(c.fechaAlta || '-'), Vehículos: String(state.vehiculos.filter(v => v.clienteId === c.id).length) }));
+        els.clientesTableWrap.innerHTML = rows.length ? buildSimpleTable(rows, true) : '<div class="empty">No hay clientes.</div>';
+      }
+
+      function renderVehiculos(){
+        const q = normalize(els.globalSearch.value);
+        const rows = state.vehiculos.filter(v => (v.vehiculo + ' ' + v.patente + ' ' + v.tipoEquipo).toLowerCase().includes(q)).map(v => ({ Patente: '<strong>' + escapeHtml(v.patente || '-') + '</strong>', Vehículo: escapeHtml(v.vehiculo || '-'), Cliente: escapeHtml(getClienteName(v.clienteId)), Equipo: escapeHtml(v.tipoEquipo || '-') }));
+        els.vehiculosTableWrap.innerHTML = rows.length ? buildSimpleTable(rows, true) : '<div class="empty">No hay vehículos.</div>';
+      }
+
+      function renderAll(){ renderDashboard(); renderConsultas(); renderClientes(); renderVehiculos(); }
+
+      function seedDemoData(){
+        if(state.consultas.length || state.clientes.length || state.vehiculos.length){ if(!confirm('Ya hay datos. ¿Querés agregar demo igual?')) return; }
+        const demo = [
+          {nombre:'Martín López',telefono:'3515551111',vehiculo:'Gol Trend',patente:'AA123BB',categoria:'instalacion',tipoEquipo:'5ta generación',observacion:'Consulta por equipo completo'},
+          {nombre:'Carla Díaz',telefono:'3515552222',vehiculo:'Corsa',patente:'AC456DE',categoria:'ph',tipoEquipo:'3ra generación',observacion:'PH con cambio de válvula'},
+          {nombre:'Nicolás Rojas',telefono:'3515553333',vehiculo:'Fluence 2.0',patente:'AD789FG',categoria:'oblea',tipoEquipo:'5ta generación',observacion:'Renovación de oblea'},
+          {nombre:'Sergio Pereyra',telefono:'3515554444',vehiculo:'Kangoo',patente:'AE321HI',categoria:'repuesto',tipoEquipo:'4ta generación',observacion:'Necesita pico de carga y manguera'}
+        ];
+        demo.forEach(d => {
+          const pack = upsertClienteVehiculo(d);
+          state.consultas.push({ id: uid('con'), fecha: today(), clienteId: pack.cliente.id, vehiculoId: pack.vehiculo ? pack.vehiculo.id : null, nombre: d.nombre, telefono: d.telefono, vehiculo: d.vehiculo, patente: d.patente, categoria: d.categoria, tipoEquipo: d.tipoEquipo, observacion: d.observacion, estado: 'pendiente', fechaCierre: '', tallerCierre: '', motivoPerdido: '' });
+        });
+        persist();
+      }
+
+      function resetAllData(){
+        if(!confirm('Se van a borrar todos los datos de Firebase.')) return;
+        state = { clientes: [], vehiculos: [], consultas: [] };
+        dbRef.set(state).then(() => { renderAll(); setView('dashboard'); }).catch(err => { console.error('Error vaciando Firebase:', err); alert('No se pudo vaciar Firebase.'); });
+      }
+
+      document.querySelectorAll('.nav button').forEach(btn => btn.addEventListener('click', () => setView(btn.dataset.view)));
+      document.getElementById('btnNuevaConsultaTop').addEventListener('click', () => setView('consulta'));
+      document.getElementById('btnDemo').addEventListener('click', seedDemoData);
+      document.getElementById('btnVaciar').addEventListener('click', resetAllData);
+      document.getElementById('btnGuardarConsulta').addEventListener('click', saveConsulta);
+      document.getElementById('btnLimpiarConsulta').addEventListener('click', clearConsultaForm);
+      els.globalSearch.addEventListener('input', renderAll);
+      document.addEventListener('click', (e) => {
+        const btn = e.target.closest('button[data-action][data-id]');
+        if(!btn) return;
+        const id = btn.dataset.id;
+        const action = btn.dataset.action;
+        if(action === 'borrar') deleteConsulta(id); else setEstadoConsulta(id, action);
+      });
+
+      dbRef.on('value', (snapshot) => {
+        state = normalizeState(snapshot.val());
+        isLoaded = true;
+        renderAll();
+      }, (error) => {
+        console.error('Error leyendo Firebase:', error);
+        alert('No se pudo leer Firebase. Revisá la config y las reglas.');
+      });
+
+      setView('dashboard');
+    })();
+  </script>
+</body>
+</html>
